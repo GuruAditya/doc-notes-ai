@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Home</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='index.js') }}" defer></script>
+</head>
+<body>
+
+<div class="hamburger-menu">
+  <span class="bar"></span>
+  <span class="bar"></span>
+  <span class="bar"></span>
+</div>
+
+<div id="sidebar" class="sidebar">
+  <a href="/">Home</a>
+</div>
+
+<div id="layout">
+  <form id="input">
+    <input type="file" id="ads" name="ads" accept="application/pdf" required>
+    <div>
+      <button id="submit">Submit</button>
+      <button type="reset" id="reset">Reset</button>
+    </div>
+  </form>
+
+  <button id="summarizeBtn">Summarize</button>
+  
+  <p id="result" style="white-space: pre-wrap; margin-top: 20px;"></p>
+</div>
+
+</body>
+</html>
