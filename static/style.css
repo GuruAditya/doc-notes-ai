@@ -12,16 +12,15 @@ body {
 #layout {
   min-height: 100vh;
   display: flex;
-  flex-direction: row; /* Puts items side-by-side */
-  align-items: flex-start; /* Aligns both columns to the top */
+  flex-direction: row; 
+  align-items: flex-start; 
   justify-content: center;
   padding: 60px 40px; 
-  gap: 40px; /* Space between main content and notebook */
+  gap: 40px; 
   box-sizing: border-box;
   transition: transform 0.3s ease, margin-left 0.3s ease;
 }
 
-/* Shifts layout over when sidebar is active */
 #layout.shifted {
   margin-left: 250px;
 }
@@ -31,7 +30,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 600px; /* Keeps the form from getting too wide */
+  max-width: 600px; 
   width: 100%;
 }
 
@@ -57,7 +56,6 @@ body {
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-/* Precise Hamburger Transform Fixes */
 .hamburger-menu.active .bar:nth-child(1) {
   transform: translateY(10.5px) rotate(45deg);
 }
@@ -97,7 +95,6 @@ body {
   font-size: 16px;
 }
 
-/* Sidebar Layout Containers for History Rows */
 .history-item-wrapper {
   display: flex;
   align-items: center;
@@ -128,7 +125,6 @@ body {
   color: #fff;
 }
 
-/* Small Subtle Dustbin Trash Icon Action Button */
 .delete-btn {
   background: none !important;
   border: none !important;
@@ -140,21 +136,18 @@ body {
   max-width: fit-content !important;
   width: auto !important;
   margin: 0 !important;
-  
-  /* Hides the dustbin by default */
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease !important;
 }
 
-/* Make dustbin slide into visual focus when hovering the wrapper element */
 .history-item-wrapper:hover .delete-btn {
   opacity: 1;
   transform: scale(1);
 }
 
 .delete-btn:hover {
-  color: #ff5c5c !important; /* Turns red when hovering precisely over the dustbin */
+  color: #ff5c5c !important; 
 }
 
 /* ================= UI INTERFACE (FORM & BUTTONS) ================= */
@@ -172,7 +165,6 @@ body {
   margin-bottom: 20px;
 }
 
-/* Modernized Inputs and Buttons */
 #ads {
   color: #e0e0e6;
   background-color: #1e1e24;
@@ -225,7 +217,6 @@ button:active {
   background-color: #4f5058;
 }
 
-/* Feature Trigger Button */
 #summarizeBtn {
   max-width: 460px;
   width: 100%;
@@ -240,7 +231,6 @@ button:active {
   background-color: #2b9e56;
 }
 
-/* Result Box Display */
 #result {
   max-width: 460px;
   width: 100%;
@@ -256,20 +246,16 @@ button:active {
 
 /* ================= NOTEBOOK COMMENTS STYLING ================= */
 #comments-section {
-  width: 350px; /* Fixed width for the notebook */
+  width: 350px; 
   min-width: 320px;
-  height: calc(100vh - 120px); /* Stretches from top to bottom */
+  height: calc(100vh - 120px); 
   background: #2a2a35;
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
-  
-  /* Internal flex layout so the list takes up remaining height */
   display: flex; 
   flex-direction: column;
-  
-  /* Makes it stick to the screen even if the left side summary is super long */
   position: sticky; 
   top: 60px;
 }
@@ -279,11 +265,10 @@ button:active {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow-y: auto; /* Adds a scrollbar to the notes area */
-  padding-right: 10px; /* Breathing room for the scrollbar */
+  overflow-y: auto; 
+  padding-right: 10px; 
 }
 
-/* Custom Sleek Scrollbar for the Notebook */
 #comments-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -296,19 +281,23 @@ button:active {
   border-radius: 4px;
 }
 
-#comment-form input[type="text"] {
-  flex: 1; 
-  padding: 10px; 
+#comment-form textarea {
+  width: 100%;
+  min-height: 80px; 
+  padding: 12px; 
   border-radius: 6px; 
   border: 1px solid #4a4a5a; 
   background: #141419; 
-  color: #fff;
+  color: #e0e0e6;
   outline: none;
   font-size: 14px;
+  font-family: inherit;
   transition: border-color 0.2s ease;
+  resize: vertical; 
+  box-sizing: border-box;
 }
 
-#comment-form input[type="text"]:focus {
+#comment-form textarea:focus {
   border-color: #7289da !important;
 }
 
@@ -328,7 +317,16 @@ button:active {
   border-left: 4px solid #248046;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   animation: fadeIn 0.3s ease-in-out;
-  flex-shrink: 0; /* Prevents comments from squishing */
+  flex-shrink: 0; 
+}
+
+.comment-card p {
+  white-space: pre-wrap;
+  margin: 0 0 6px 0; 
+  color: #e0e0e6; 
+  font-size: 14px; 
+  word-break: break-word; 
+  line-height: 1.5;
 }
 
 @keyframes fadeIn {

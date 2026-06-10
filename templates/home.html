@@ -42,9 +42,9 @@
   <div id="comments-section" style="display: none;">
     <h3 style="color: #fff; margin-top: 0; margin-bottom: 15px;">📓 Document Notes</h3>
     
-    <form id="comment-form" style="display: flex; gap: 10px; margin-bottom: 20px;">
-      <input type="text" id="comment-input" placeholder="Jot down a note..." required>
-      <button type="submit" style="max-width: 70px; padding: 10px;">Post</button>
+    <form id="comment-form" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+      <textarea id="comment-input" placeholder="Jot down a note..." required rows="3"></textarea>
+      <button type="submit" style="align-self: flex-end; padding: 10px 20px;">Post</button>
     </form>
 
     <div id="comments-list"></div>

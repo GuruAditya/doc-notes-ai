@@ -86,8 +86,8 @@ async function loadPreviousDoc(id, filename) {
   uploadedDocId = id; 
   result.innerText = `Loading cached summary for: ${filename}...`;
   
-  // Show comments section immediately
-  document.getElementById("comments-section").style.display = "block";
+  // Show comments section immediately (using 'flex' to preserve layout)
+  document.getElementById("comments-section").style.display = "flex";
   loadComments(id);
   
   if (sidebar) sidebar.classList.remove("active");
@@ -147,7 +147,7 @@ async function loadComments(docId) {
       const date = new Date(c.created_at).toLocaleDateString(undefined, {hour: '2-digit', minute:'2-digit'});
       return `
         <div class="comment-card">
-          <p style="margin: 0 0 6px 0; color: #e0e0e6; font-size: 14px; word-break: break-word; line-height: 1.4;">${c.text}</p>
+          <p>${c.text}</p>
           <span style="font-size: 11px; color: #666; font-weight: 500;">${date}</span>
         </div>
       `;
@@ -210,7 +210,7 @@ if (form) {
             result.innerText = data.message || "Upload successful.";
             loadHistory(); 
             
-            // Show comments immediately for the newly uploaded file
+            // Show comments immediately for the newly uploaded file using 'flex'
             document.getElementById("comments-section").style.display = "flex";
             loadComments(uploadedDocId);
         } else {
