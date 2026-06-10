@@ -1,46 +1,53 @@
 body {
-  background-color: #323437;
+  background-color: #1e1e24;
   height: 100vh;
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #e0e0e6;
+  overflow-x: hidden;
 }
+
 #layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #d1d0c5;
-  transition: margin-left 0.3s ease;
+  padding: 20px;
+  box-sizing: border-box;
+  transition: transform 0.3s ease, margin-left 0.3s ease;
 }
 
+/* Shifts layout over when sidebar is active */
 #layout.shifted {
   margin-left: 250px;
 }
 
-/* Hamburger */
+/* Hamburger Menu Icon */
 .hamburger-menu {
   width: 30px;
+  height: 24px;
   cursor: pointer;
   position: fixed;
-  top: 8px;
-  left: 8px;
+  top: 20px;
+  left: 20px;
   z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .bar {
   width: 100%;
-  height: 4px;
-  background-color: #d1d0c5;
-  margin: 5px 0;
+  height: 3px;
+  background-color: #e0e0e6;
   border-radius: 2px;
-  transform-origin: center;
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-/* Hamburger animation */
+/* Precise Hamburger Transform Fixes */
 .hamburger-menu.active .bar:nth-child(1) {
-  transform: rotate(45deg) translate(6px, 6px);
+  transform: translateY(10.5px) rotate(45deg);
 }
 
 .hamburger-menu.active .bar:nth-child(2) {
@@ -48,65 +55,189 @@ body {
 }
 
 .hamburger-menu.active .bar:nth-child(3) {
-  transform: rotate(-45deg) translate(6px, -6px);
+  transform: translateY(-10.5px) rotate(-45deg);
 }
 
-/* Sidebar */
+/* Sidebar Styling */
 .sidebar {
   height: 100vh;
   width: 250px;
-  background-color: #333;
+  background-color: #141419;
   position: fixed;
   top: 0;
   left: -250px;
   transition: left 0.3s ease;
-  padding-top: 60px;
+  padding-top: 80px;
   z-index: 1000;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar.active {
   left: 0;
 }
 
-.sidebar a {
+.sidebar-logo {
   display: block;
-  color: white;
-  padding: 15px;
+  color: #fff;
+  padding: 15px 25px;
   text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
 }
 
-.sidebar a:hover {
-  background-color: #575757;
+/* Sidebar Layout Containers for History Rows */
+.history-item-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  transition: background-color 0.2s ease;
+  padding: 5px 15px 5px 0;
 }
 
-#input {
+.history-item-wrapper:hover {
+  background-color: #252530;
+}
+
+.sidebar .history-item {
+  flex: 1;
+  display: block;
+  color: #a0a0b0;
+  padding: 12px 15px 12px 25px;
+  text-decoration: none;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.sidebar .history-item:hover {
+  color: #fff;
+}
+
+/* Small Subtle Dustbin Trash Icon Action Button */
+.delete-btn {
+  background: none !important;
+  border: none !important;
+  color: #8a8a9a !important;
+  cursor: pointer;
+  padding: 6px 10px !important;
+  font-size: 14px !important;
+  box-shadow: none !important;
+  max-width: fit-content !important;
+  width: auto !important;
+  margin: 0 !important;
+  
+  /* Hides the dustbin by default */
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease !important;
+}
+
+/* Make dustbin slide into visual focus when hovering the wrapper element */
+.history-item-wrapper:hover .delete-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.delete-btn:hover {
+  color: #ff5c5c !important; /* Turns red when hovering precisely over the dustbin */
+}
+
+/* Form Container / Modern UI Interface Card */
+#upload-form {
+  background: #2a2a35;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 20px;
+}
 
-}
+/* Modernized Inputs and Buttons */
 #ads {
-  color: #d1d0c5;
-  background-color: #222;
-  border: 1px solid #555;
-  padding: 8px;
+  color: #e0e0e6;
+  background-color: #1e1e24;
+  border: 2px dashed #4a4a5a;
+  padding: 15px;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  transition: border-color 0.2s;
 }
-#submit{
-  color: #d1d0c5;
-  background-color: #222;
-  border: 1px solid #555;
-  padding: 8px;
-  cursor: pointer;
-  border-radius: 5px;
+
+#ads:hover {
+  border-color: #7289da;
 }
-#reset{
-  color: #d1d0c5;
-  background-color: #222;
-  border: 1px solid #555;
-  padding: 8px;
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+button {
+  flex: 1;
+  color: #fff;
+  background-color: #4e5d94;
+  border: none;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 6px;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+button:hover {
+  background-color: #677bc4;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+#reset {
+  background-color: #3e3f46;
+}
+
+#reset:hover {
+  background-color: #4f5058;
+}
+
+/* Feature Trigger Button */
+#summarizeBtn {
+  max-width: 460px;
+  width: 100%;
+  background-color: #248046;
+  font-size: 16px;
+  padding: 14px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(36, 128, 70, 0.2);
+}
+
+#summarizeBtn:hover {
+  background-color: #2b9e56;
+}
+
+/* Result Box Display */
+#result {
+  max-width: 460px;
+  width: 100%;
+  background: #141419;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #7289da;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #c9d1d9;
+  box-sizing: border-box;
 }

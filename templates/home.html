@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Home</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="{{ url_for('static', filename='index.js') }}" defer></script>
+  <title>Document Summarizer</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/index.js" defer></script>
 </head>
 <body>
 
@@ -15,19 +15,23 @@
 </div>
 
 <div id="sidebar" class="sidebar">
-  <a href="/">Home</a>
+  <a href="/" class="sidebar-logo">📁 Document History</a>
+  <hr style="border-color: #252530; margin: 10px 0;">
+  
+  <div id="history-list">
+    <span class="no-history">No documents uploaded yet</span>
+  </div>
 </div>
-
 <div id="layout">
-  <form id="input">
+  <form id="upload-form">
+    <h3 style="margin-top: 0; color: #fff;">Upload Document</h3>
     <input type="file" id="ads" name="ads" accept="application/pdf" required>
-    <div>
-      <button id="submit">Submit</button>
+    <div class="btn-group"> <button type="submit" id="submit">Submit File</button>
       <button type="reset" id="reset">Reset</button>
     </div>
   </form>
 
-  <button id="summarizeBtn">Summarize</button>
+  <button id="summarizeBtn">✨ Summarize Document</button>
   
   <p id="result" style="white-space: pre-wrap; margin-top: 20px;"></p>
 </div>
