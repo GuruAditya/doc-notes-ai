@@ -1,3 +1,4 @@
+/* ================= GLOBAL & BASE ================= */
 body {
   background-color: #1e1e24;
   height: 100vh;
@@ -7,21 +8,34 @@ body {
   overflow-x: hidden;
 }
 
+/* ================= MAIN LAYOUT (SPLIT PANE) ================= */
 #layout {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row; /* Puts items side-by-side */
+  align-items: flex-start; /* Aligns both columns to the top */
   justify-content: center;
-  padding: 20px;
+  padding: 60px 40px; 
+  gap: 40px; /* Space between main content and notebook */
   box-sizing: border-box;
   transition: transform 0.3s ease, margin-left 0.3s ease;
 }
 
+/* Shifts layout over when sidebar is active */
 #layout.shifted {
   margin-left: 250px;
 }
 
+#main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 600px; /* Keeps the form from getting too wide */
+  width: 100%;
+}
+
+/* ================= HAMBURGER MENU ================= */
 .hamburger-menu {
   width: 30px;
   height: 24px;
@@ -43,6 +57,7 @@ body {
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
+/* Precise Hamburger Transform Fixes */
 .hamburger-menu.active .bar:nth-child(1) {
   transform: translateY(10.5px) rotate(45deg);
 }
@@ -55,6 +70,7 @@ body {
   transform: translateY(-10.5px) rotate(-45deg);
 }
 
+/* ================= LEFT SIDEBAR (HISTORY) ================= */
 .sidebar {
   height: 100vh;
   width: 250px;
@@ -81,6 +97,7 @@ body {
   font-size: 16px;
 }
 
+/* Sidebar Layout Containers for History Rows */
 .history-item-wrapper {
   display: flex;
   align-items: center;
@@ -111,6 +128,7 @@ body {
   color: #fff;
 }
 
+/* Small Subtle Dustbin Trash Icon Action Button */
 .delete-btn {
   background: none !important;
   border: none !important;
@@ -122,20 +140,24 @@ body {
   max-width: fit-content !important;
   width: auto !important;
   margin: 0 !important;
+  
+  /* Hides the dustbin by default */
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease !important;
 }
 
+/* Make dustbin slide into visual focus when hovering the wrapper element */
 .history-item-wrapper:hover .delete-btn {
   opacity: 1;
   transform: scale(1);
 }
 
 .delete-btn:hover {
-  color: #ff5c5c !important; 
+  color: #ff5c5c !important; /* Turns red when hovering precisely over the dustbin */
 }
 
+/* ================= UI INTERFACE (FORM & BUTTONS) ================= */
 #upload-form {
   background: #2a2a35;
   padding: 30px;
@@ -150,6 +172,7 @@ body {
   margin-bottom: 20px;
 }
 
+/* Modernized Inputs and Buttons */
 #ads {
   color: #e0e0e6;
   background-color: #1e1e24;
@@ -202,6 +225,7 @@ button:active {
   background-color: #4f5058;
 }
 
+/* Feature Trigger Button */
 #summarizeBtn {
   max-width: 460px;
   width: 100%;
@@ -216,6 +240,7 @@ button:active {
   background-color: #2b9e56;
 }
 
+/* Result Box Display */
 #result {
   max-width: 460px;
   width: 100%;
@@ -229,22 +254,62 @@ button:active {
   box-sizing: border-box;
 }
 
+/* ================= NOTEBOOK COMMENTS STYLING ================= */
 #comments-section {
+  width: 350px; /* Fixed width for the notebook */
+  min-width: 320px;
+  height: calc(100vh - 120px); /* Stretches from top to bottom */
   background: #2a2a35;
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
+  
+  /* Internal flex layout so the list takes up remaining height */
+  display: flex; 
+  flex-direction: column;
+  
+  /* Makes it stick to the screen even if the left side summary is super long */
+  position: sticky; 
+  top: 60px;
+}
+
+#comments-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto; /* Adds a scrollbar to the notes area */
+  padding-right: 10px; /* Breathing room for the scrollbar */
+}
+
+/* Custom Sleek Scrollbar for the Notebook */
+#comments-list::-webkit-scrollbar {
+  width: 6px;
+}
+#comments-list::-webkit-scrollbar-track {
+  background: #1e1e24;
+  border-radius: 4px;
+}
+#comments-list::-webkit-scrollbar-thumb {
+  background: #4a4a5a;
+  border-radius: 4px;
 }
 
 #comment-form input[type="text"] {
+  flex: 1; 
+  padding: 10px; 
+  border-radius: 6px; 
+  border: 1px solid #4a4a5a; 
+  background: #141419; 
+  color: #fff;
   outline: none;
   font-size: 14px;
   transition: border-color 0.2s ease;
 }
 
 #comment-form input[type="text"]:focus {
-  border-color: #7289da !important; 
+  border-color: #7289da !important;
 }
 
 #comment-form button {
@@ -263,9 +328,10 @@ button:active {
   border-left: 4px solid #248046;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   animation: fadeIn 0.3s ease-in-out;
+  flex-shrink: 0; /* Prevents comments from squishing */
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
 }

@@ -211,7 +211,7 @@ if (form) {
             loadHistory(); 
             
             // Show comments immediately for the newly uploaded file
-            document.getElementById("comments-section").style.display = "block";
+            document.getElementById("comments-section").style.display = "flex";
             loadComments(uploadedDocId);
         } else {
             result.innerText = data.error || "Upload failed.";

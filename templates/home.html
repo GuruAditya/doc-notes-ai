@@ -21,31 +21,35 @@
   <div id="history-list">
     <span class="no-history">No documents uploaded yet</span>
   </div>
-</div> <div id="layout">
-  <form id="upload-form">
-    <h3 style="margin-top: 0; color: #fff;">Upload Document</h3>
-    <input type="file" id="ads" name="ads" accept="application/pdf" required>
-    <div class="btn-group"> 
-      <button type="submit" id="submit">Submit File</button>
-      <button type="reset" id="reset">Reset</button>
-    </div>
-  </form>
+</div>
 
-  <button id="summarizeBtn">✨ Summarize Document</button>
+<div id="layout">
   
-  <p id="result" style="white-space: pre-wrap; margin-top: 20px;"></p>
-
-  <div id="comments-section" style="display: none; width: 100%; max-width: 460px; margin-top: 30px;">
-    <h3 style="color: #fff; margin-bottom: 15px;">Document Notes & Comments</h3>
-    
-    <form id="comment-form" style="display: flex; gap: 10px; margin-bottom: 20px;">
-      <input type="text" id="comment-input" placeholder="Write a note about this PDF..." required 
-             style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #4a4a5a; background: #141419; color: #fff;">
-      <button type="submit" style="max-width: 80px; padding: 10px;">Post</button>
+  <div id="main-content">
+    <form id="upload-form">
+      <h3 style="margin-top: 0; color: #fff;">Upload Document</h3>
+      <input type="file" id="ads" name="ads" accept="application/pdf" required>
+      <div class="btn-group"> 
+        <button type="submit" id="submit">Submit File</button>
+        <button type="reset" id="reset">Reset</button>
+      </div>
     </form>
 
-    <div id="comments-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    <button id="summarizeBtn">✨ Summarize Document</button>
+    <p id="result" style="white-space: pre-wrap; margin-top: 20px;"></p>
   </div>
+
+  <div id="comments-section" style="display: none;">
+    <h3 style="color: #fff; margin-top: 0; margin-bottom: 15px;">📓 Document Notes</h3>
+    
+    <form id="comment-form" style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <input type="text" id="comment-input" placeholder="Jot down a note..." required>
+      <button type="submit" style="max-width: 70px; padding: 10px;">Post</button>
+    </form>
+
+    <div id="comments-list"></div>
+  </div>
+
 </div> 
 
 </body>
