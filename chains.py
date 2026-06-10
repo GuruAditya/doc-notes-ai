@@ -43,6 +43,5 @@ reflection_prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-
 generate_chain = generation_prompt | llm
 reflect_chain = reflection_prompt | llm

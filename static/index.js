@@ -2,7 +2,6 @@ const hamburger = document.querySelector(".hamburger-menu");
 const sidebar = document.getElementById("sidebar");
 const layout = document.getElementById("layout");
 
-// Toggle Sidebar & Shift Layout Content
 if (hamburger && sidebar && layout) {
   hamburger.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -10,14 +9,12 @@ if (hamburger && sidebar && layout) {
     hamburger.classList.toggle("active");
     layout.classList.toggle("shifted");
     
-    // Refresh history sidebar view list whenever it is opened
     if (sidebar.classList.contains("active")) {
       loadHistory();
     }
   });
 }
 
-// Close sidebar and reset layout when clicking anywhere outside
 document.addEventListener("click", () => {
   if (sidebar) sidebar.classList.remove("active");
   if (hamburger) hamburger.classList.remove("active");
@@ -30,15 +27,12 @@ if (sidebar) {
   });
 }
 
-/* ================= BACKEND CONNECTION ================= */
-
 const form = document.getElementById("upload-form");  
 const result = document.getElementById("result");
 const summarizeBtn = document.getElementById("summarizeBtn");
 
-let uploadedDocId = null;  // Stores the currently active doc ID
+let uploadedDocId = null;  
 
-// 1. FETCH AND RENDER PREVIOUS DOCUMENTS WITH DELETE ICONS
 async function loadHistory() {
   const historyList = document.getElementById("history-list");
   if (!historyList) return;
@@ -54,7 +48,6 @@ async function loadHistory() {
       return;
     }
 
-    // Map documents to rows containing both the file link and a dustbin icon
     historyList.innerHTML = docs.map(doc => `
       <div class="history-item-wrapper">
         <a href="#" class="history-item" data-id="${doc.id}">
@@ -64,21 +57,18 @@ async function loadHistory() {
       </div>
     `).join("");
 
-    // Add click listeners to every history file selection link
     document.querySelectorAll(".history-item").forEach(item => {
       item.addEventListener("click", (e) => {
         e.preventDefault();
         const docId = item.getAttribute("data-id");
-        // Pull text content carefully ignoring wrapper spaces
         const filename = item.textContent.replace('📄', '').trim();
         loadPreviousDoc(docId, filename);
       });
     });
 
-    // Add click listeners to every dustbin icon
     document.querySelectorAll(".delete-btn").forEach(btn => {
       btn.addEventListener("click", async (e) => {
-        e.stopPropagation(); // Prevents clicking the dustbin from choosing/loading the file
+        e.stopPropagation(); 
         const docId = btn.getAttribute("data-id");
         
         if (confirm("Are you sure you want to permanently delete this document and summary from your database?")) {
@@ -92,23 +82,21 @@ async function loadHistory() {
   }
 }
 
-// 2. SELECT A PREVIOUS DOCUMENT FROM SIDEBAR (AUTOMATICALLY FETCHES SUMMARY)
 async function loadPreviousDoc(id, filename) {
-  uploadedDocId = id; // Update global tracking variable
-  
+  uploadedDocId = id; 
   result.innerText = `Loading cached summary for: ${filename}...`;
   
-  // Close sidebar items cleanly on click
+  // Show comments section immediately
+  document.getElementById("comments-section").style.display = "block";
+  loadComments(id);
+  
   if (sidebar) sidebar.classList.remove("active");
   if (hamburger) hamburger.classList.remove("active");
   if (layout) layout.classList.remove("shifted");
 
   try {
     const res = await fetch(`/summarize/${id}`);  
-
-    if (!res.ok) {
-        throw new Error(`Server Error: ${res.status} ${res.statusText}`);
-    }
+    if (!res.ok) throw new Error(`Server Error: ${res.status} ${res.statusText}`);
 
     const data = await res.json();
     
@@ -117,40 +105,85 @@ async function loadPreviousDoc(id, filename) {
     } else {
         result.innerText = `Selected: ${filename}\n\nThis document hasn't been summarized yet. Click the "Summarize Document" button below to generate one.`;
     }
-    
   } catch (error) {
     console.error(error);
     result.innerText = `Error loading document "${filename}": ` + error.message;
   }
 }
 
-// 3. HIT THE BACKEND DELETE API ENDPOINT
 async function deleteHistoryEntry(id) {
   try {
-    const res = await fetch(`/history/${id}`, {
-      method: 'DELETE'
-    });
+    const res = await fetch(`/history/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error("Failed to delete document from backend storage");
 
-    if (!res.ok) {
-      throw new Error("Failed to delete document from backend storage");
-    }
-
-    // Reset layout view box if the active loaded document was the one deleted
     if (uploadedDocId === id) {
       uploadedDocId = null;
       document.getElementById("result").innerText = "The active document was deleted.";
+      document.getElementById("comments-section").style.display = "none";
     }
-
-    // Refresh history panel entries listing
     loadHistory();
-
   } catch (error) {
     console.error(error);
     alert("Error deleting file: " + error.message);
   }
 }
 
-// 4. FILE UPLOAD EVENT LISTENER
+async function loadComments(docId) {
+  const commentsList = document.getElementById("comments-list");
+  if (!commentsList) return;
+
+  try {
+    const res = await fetch(`/documents/${docId}/comments`);
+    if (!res.ok) throw new Error("Failed to load comments");
+
+    const comments = await res.json();
+    
+    if (comments.length === 0) {
+      commentsList.innerHTML = '<p style="color: #666; font-style: italic; margin: 0;">No notes or comments added yet.</p>';
+      return;
+    }
+
+    commentsList.innerHTML = comments.map(c => {
+      const date = new Date(c.created_at).toLocaleDateString(undefined, {hour: '2-digit', minute:'2-digit'});
+      return `
+        <div class="comment-card">
+          <p style="margin: 0 0 6px 0; color: #e0e0e6; font-size: 14px; word-break: break-word; line-height: 1.4;">${c.text}</p>
+          <span style="font-size: 11px; color: #666; font-weight: 500;">${date}</span>
+        </div>
+      `;
+    }).join("");
+  } catch (error) {
+    console.error("Error drawing comments layer:", error);
+  }
+}
+
+const commentForm = document.getElementById("comment-form");
+if (commentForm) {
+  commentForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!uploadedDocId) return; 
+
+    const input = document.getElementById("comment-input");
+    const commentText = input.value.trim();
+    if (!commentText) return;
+
+    try {
+      const res = await fetch(`/documents/${uploadedDocId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: commentText })
+      });
+
+      if (!res.ok) throw new Error("Could not save comment");
+      input.value = ""; 
+      loadComments(uploadedDocId); 
+    } catch (error) {
+      console.error(error);
+      alert("Error saving comment: " + error.message);
+    }
+  });
+}
+
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -166,17 +199,20 @@ if (form) {
 
     result.innerText = "Uploading PDF...";
     uploadedDocId = null;
+    document.getElementById("comments-section").style.display = "none"; 
 
     try {
-        const res = await fetch("/upload", {
-            method: "POST",
-            body: formData
-        });
+        const res = await fetch("/upload", { method: "POST", body: formData });
         const data = await res.json();
+        
         if (data.id) {
             uploadedDocId = data.id;  
             result.innerText = data.message || "Upload successful.";
-            loadHistory(); // Refresh history list instantly on upload!
+            loadHistory(); 
+            
+            // Show comments immediately for the newly uploaded file
+            document.getElementById("comments-section").style.display = "block";
+            loadComments(uploadedDocId);
         } else {
             result.innerText = data.error || "Upload failed.";
         }
@@ -187,7 +223,6 @@ if (form) {
   });
 }
 
-// 5. SUMMARIZE EVENT LISTENER
 if (summarizeBtn) {
   summarizeBtn.addEventListener("click", async () => {
     if (!uploadedDocId) {
@@ -199,14 +234,10 @@ if (summarizeBtn) {
 
     try {
         const res = await fetch(`/summarize/${uploadedDocId}`);  
-
-        if (!res.ok) {
-            throw new Error(`Server Error: ${res.status} ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error(`Server Error: ${res.status} ${res.statusText}`);
 
         const data = await res.json();
         result.innerText = data.summary || data.error;
-        
     } catch (error) {
         console.error(error);
         result.innerText = "Error: " + error.message + " (Check Python Terminal)";
@@ -214,5 +245,4 @@ if (summarizeBtn) {
   });
 }
 
-// Pre-hydrate document storage item listings right on window start up
 document.addEventListener("DOMContentLoaded", loadHistory);

@@ -18,12 +18,10 @@ body {
   transition: transform 0.3s ease, margin-left 0.3s ease;
 }
 
-/* Shifts layout over when sidebar is active */
 #layout.shifted {
   margin-left: 250px;
 }
 
-/* Hamburger Menu Icon */
 .hamburger-menu {
   width: 30px;
   height: 24px;
@@ -45,7 +43,6 @@ body {
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-/* Precise Hamburger Transform Fixes */
 .hamburger-menu.active .bar:nth-child(1) {
   transform: translateY(10.5px) rotate(45deg);
 }
@@ -58,7 +55,6 @@ body {
   transform: translateY(-10.5px) rotate(-45deg);
 }
 
-/* Sidebar Styling */
 .sidebar {
   height: 100vh;
   width: 250px;
@@ -85,7 +81,6 @@ body {
   font-size: 16px;
 }
 
-/* Sidebar Layout Containers for History Rows */
 .history-item-wrapper {
   display: flex;
   align-items: center;
@@ -116,7 +111,6 @@ body {
   color: #fff;
 }
 
-/* Small Subtle Dustbin Trash Icon Action Button */
 .delete-btn {
   background: none !important;
   border: none !important;
@@ -128,24 +122,20 @@ body {
   max-width: fit-content !important;
   width: auto !important;
   margin: 0 !important;
-  
-  /* Hides the dustbin by default */
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease !important;
 }
 
-/* Make dustbin slide into visual focus when hovering the wrapper element */
 .history-item-wrapper:hover .delete-btn {
   opacity: 1;
   transform: scale(1);
 }
 
 .delete-btn:hover {
-  color: #ff5c5c !important; /* Turns red when hovering precisely over the dustbin */
+  color: #ff5c5c !important; 
 }
 
-/* Form Container / Modern UI Interface Card */
 #upload-form {
   background: #2a2a35;
   padding: 30px;
@@ -160,7 +150,6 @@ body {
   margin-bottom: 20px;
 }
 
-/* Modernized Inputs and Buttons */
 #ads {
   color: #e0e0e6;
   background-color: #1e1e24;
@@ -213,7 +202,6 @@ button:active {
   background-color: #4f5058;
 }
 
-/* Feature Trigger Button */
 #summarizeBtn {
   max-width: 460px;
   width: 100%;
@@ -228,7 +216,6 @@ button:active {
   background-color: #2b9e56;
 }
 
-/* Result Box Display */
 #result {
   max-width: 460px;
   width: 100%;
@@ -240,4 +227,45 @@ button:active {
   line-height: 1.6;
   color: #c9d1d9;
   box-sizing: border-box;
+}
+
+#comments-section {
+  background: #2a2a35;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+#comment-form input[type="text"] {
+  outline: none;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+#comment-form input[type="text"]:focus {
+  border-color: #7289da !important; 
+}
+
+#comment-form button {
+  background-color: #248046;
+  font-weight: 600;
+}
+
+#comment-form button:hover {
+  background-color: #2b9e56;
+}
+
+.comment-card {
+  background: #141419;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #248046;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }

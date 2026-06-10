@@ -73,32 +73,26 @@ async def upload_file(file: UploadFile = File(...)):
             "message": "File stored in Cloudinary and metadata in MongoDB"
         }
     except Exception as e:
-        traceback.print_exc()  # prints full error in terminal
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
-# ================= NEW: HISTORY ENDPOINT =================
 @app.get("/history")
 async def get_upload_history():
     try:
-        # Fetch records, sort by newest 'created_at', limit to last 20 documents
         cursor = records.find({}, {"filename": 1, "_id": 1}).sort("created_at", -1).limit(20)
         history = []
-        
         async for doc in cursor:
             history.append({
                 "id": str(doc["_id"]),
                 "filename": doc["filename"]
             })
-            
         return history
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
-# =========================================================
 
 @app.get("/summarize/{doc_id}")
 async def summarize_document(doc_id: str):
-    # Validate ObjectId format before querying
     try:
         object_id = ObjectId(doc_id)
     except InvalidId:
@@ -123,25 +117,57 @@ async def summarize_document(doc_id: str):
 
         return {"summary": final_summary, "cached": False}
     except Exception as e:
-        traceback.print_exc()  # prints full error in terminal
-        raise HTTPException(status_code=500, detail=str(e))  # now shows real error in browser too
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
     
-
-# ================= NEW: DELETE HISTORY ENTRY ENDPOINT =================
 @app.delete("/history/{doc_id}")
 async def delete_document(doc_id: str):
     try:
-        # Validate ObjectId format before querying
         object_id = ObjectId(doc_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail=f"Invalid document ID format: {doc_id}")
 
-    # Delete the document from the MongoDB collection
     result = await records.delete_one({"_id": object_id})
-    
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail=f"Document not found or already deleted.")
         
     return {"message": "Document successfully deleted from database"}
-# ======================================================================
 
+@app.post("/documents/{doc_id}/comments")
+async def add_comment(doc_id: str, payload: dict):
+    comment_text = payload.get("text", "").strip()
+    if not comment_text:
+        raise HTTPException(status_code=400, detail="Comment text cannot be empty")
+
+    try:
+        object_id = ObjectId(doc_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+    new_comment = {
+        "text": comment_text,
+        "created_at": datetime.now(timezone.utc)
+    }
+
+    result = await records.update_one(
+        {"_id": object_id},
+        {"$push": {"comments": new_comment}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    return {"message": "Comment added successfully", "comment": new_comment}
+
+@app.get("/documents/{doc_id}/comments")
+async def get_comments(doc_id: str):
+    try:
+        object_id = ObjectId(doc_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+    doc = await records.find_one({"_id": object_id}, {"comments": 1})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    return doc.get("comments") or []
