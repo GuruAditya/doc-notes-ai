@@ -89,9 +89,9 @@ async function loadPreviousDoc(id, filename) {
   uploadedDocId = id; 
   result.innerText = `Loading cached summary for: ${filename}...`;
   
-  // Show panels immediately
-  document.getElementById("comments-section").style.display = "flex"; // Flex for notebook layout
-  document.getElementById("chat-section").style.display = "block";    // Block for chat container
+  // Show panels immediately (Both set to 'flex' for the 3-column layout)
+  document.getElementById("comments-section").style.display = "flex"; 
+  document.getElementById("chat-section").style.display = "flex";    
   
   // Load database comments
   loadComments(id);
@@ -155,7 +155,7 @@ async function loadComments(docId) {
     }
 
     commentsList.innerHTML = comments.map(c => {
-      // Corrected to toLocaleString for proper local time formatting
+      // Formatted to proper local time zone
       const date = new Date(c.created_at).toLocaleString(undefined, { 
         month: 'short', 
         day: 'numeric', 
@@ -231,9 +231,9 @@ if (form) {
             result.innerText = data.message || "Upload successful.";
             loadHistory(); 
             
-            // Show panels for the newly uploaded file
+            // Show panels for the newly uploaded file (Both set to 'flex')
             document.getElementById("comments-section").style.display = "flex";
-            document.getElementById("chat-section").style.display = "block";
+            document.getElementById("chat-section").style.display = "flex";
             loadComments(uploadedDocId);
             
             // Wipe old chat visually

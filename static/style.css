@@ -333,3 +333,42 @@ button:active {
   from { opacity: 0; transform: translateX(10px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+
+/* ================= AI CHAT STYLING (LEFT PANE) ================= */
+#chat-section {
+  width: 350px; 
+  min-width: 320px;
+  height: calc(100vh - 120px); 
+  background: #2a2a35;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  flex-direction: column;
+  position: sticky; 
+  top: 60px;
+}
+
+#chat-log {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto; 
+  padding-right: 10px; 
+  margin-bottom: 15px;
+}
+
+/* Custom Scrollbar for Chat */
+#chat-log::-webkit-scrollbar {
+  width: 6px;
+}
+#chat-log::-webkit-scrollbar-track {
+  background: #1e1e24;
+  border-radius: 4px;
+}
+#chat-log::-webkit-scrollbar-thumb {
+  background: #4a4a5a;
+  border-radius: 4px;
+}
