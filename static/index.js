@@ -1,3 +1,4 @@
+/* ================= UI & SIDEBAR ================= */
 const hamburger = document.querySelector(".hamburger-menu");
 const sidebar = document.getElementById("sidebar");
 const layout = document.getElementById("layout");
@@ -27,12 +28,14 @@ if (sidebar) {
   });
 }
 
+/* ================= CORE STATE & ELEMENTS ================= */
 const form = document.getElementById("upload-form");  
 const result = document.getElementById("result");
 const summarizeBtn = document.getElementById("summarizeBtn");
 
 let uploadedDocId = null;  
 
+/* ================= DOCUMENT HISTORY ================= */
 async function loadHistory() {
   const historyList = document.getElementById("history-list");
   if (!historyList) return;
@@ -71,7 +74,7 @@ async function loadHistory() {
         e.stopPropagation(); 
         const docId = btn.getAttribute("data-id");
         
-        if (confirm("Are you sure you want to permanently delete this document and summary from your database?")) {
+        if (confirm("Are you sure you want to permanently delete this document and its data?")) {
           await deleteHistoryEntry(docId);
         }
       });
@@ -86,10 +89,14 @@ async function loadPreviousDoc(id, filename) {
   uploadedDocId = id; 
   result.innerText = `Loading cached summary for: ${filename}...`;
   
-  // Show comments section immediately (using 'flex' to preserve layout)
-  document.getElementById("comments-section").style.display = "flex";
+  // Show panels immediately
+  document.getElementById("comments-section").style.display = "flex"; // Flex for notebook layout
+  document.getElementById("chat-section").style.display = "block";    // Block for chat container
+  
+  // Load database comments
   loadComments(id);
   
+  // Close sidebar
   if (sidebar) sidebar.classList.remove("active");
   if (hamburger) hamburger.classList.remove("active");
   if (layout) layout.classList.remove("shifted");
@@ -116,10 +123,12 @@ async function deleteHistoryEntry(id) {
     const res = await fetch(`/history/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error("Failed to delete document from backend storage");
 
+    // If the user deleted the file they are currently looking at, clear the screen
     if (uploadedDocId === id) {
       uploadedDocId = null;
       document.getElementById("result").innerText = "The active document was deleted.";
       document.getElementById("comments-section").style.display = "none";
+      document.getElementById("chat-section").style.display = "none";
     }
     loadHistory();
   } catch (error) {
@@ -128,23 +137,31 @@ async function deleteHistoryEntry(id) {
   }
 }
 
+/* ================= NOTEBOOK COMMENTS ================= */
 async function loadComments(docId) {
   const commentsList = document.getElementById("comments-list");
   if (!commentsList) return;
 
   try {
-    const res = await fetch(`/documents/${docId}/comments`);
+    // Cache buster included: ?t=${Date.now()}
+    const res = await fetch(`/documents/${docId}/comments?t=${Date.now()}`);
     if (!res.ok) throw new Error("Failed to load comments");
 
     const comments = await res.json();
     
-    if (comments.length === 0) {
+    if (!comments || comments.length === 0) {
       commentsList.innerHTML = '<p style="color: #666; font-style: italic; margin: 0;">No notes or comments added yet.</p>';
       return;
     }
 
     commentsList.innerHTML = comments.map(c => {
-      const date = new Date(c.created_at).toLocaleDateString(undefined, {hour: '2-digit', minute:'2-digit'});
+      // Corrected to toLocaleString for proper local time formatting
+      const date = new Date(c.created_at).toLocaleString(undefined, { 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
       return `
         <div class="comment-card">
           <p>${c.text}</p>
@@ -184,6 +201,7 @@ if (commentForm) {
   });
 }
 
+/* ================= UPLOAD & SUMMARIZE ================= */
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -199,7 +217,10 @@ if (form) {
 
     result.innerText = "Uploading PDF...";
     uploadedDocId = null;
+    
+    // Hide panels while uploading
     document.getElementById("comments-section").style.display = "none"; 
+    document.getElementById("chat-section").style.display = "none"; 
 
     try {
         const res = await fetch("/upload", { method: "POST", body: formData });
@@ -210,9 +231,13 @@ if (form) {
             result.innerText = data.message || "Upload successful.";
             loadHistory(); 
             
-            // Show comments immediately for the newly uploaded file using 'flex'
+            // Show panels for the newly uploaded file
             document.getElementById("comments-section").style.display = "flex";
+            document.getElementById("chat-section").style.display = "block";
             loadComments(uploadedDocId);
+            
+            // Wipe old chat visually
+            document.getElementById("chat-log").innerHTML = "";
         } else {
             result.innerText = data.error || "Upload failed.";
         }
@@ -245,4 +270,88 @@ if (summarizeBtn) {
   });
 }
 
+/* ================= AI CHAT LOGIC ================= */
+const chatForm = document.getElementById("chat-form");
+const chatLog = document.getElementById("chat-log");
+const clearChatBtn = document.getElementById("clear-chat-btn");
+
+function appendChatMessage(sender, message) {
+  const bubble = document.createElement("div");
+  const isUser = sender === "You";
+  
+  bubble.style.padding = "10px 14px";
+  bubble.style.borderRadius = "8px";
+  bubble.style.fontSize = "14px";
+  bubble.style.lineHeight = "1.5";
+  bubble.style.maxWidth = "85%";
+  bubble.style.wordBreak = "break-word";
+  bubble.style.whiteSpace = "pre-wrap";
+  
+  if (isUser) {
+    bubble.style.alignSelf = "flex-end";
+    bubble.style.background = "#4e5d94"; 
+    bubble.style.color = "#fff";
+  } else {
+    bubble.style.alignSelf = "flex-start";
+    bubble.style.background = "#2a2a35"; 
+    bubble.style.color = "#e0e0e6";
+    bubble.style.borderLeft = "3px solid #7289da";
+  }
+  
+  bubble.innerHTML = `<strong>${sender}:</strong> <br/> ${message}`;
+  chatLog.appendChild(bubble);
+  chatLog.scrollTop = chatLog.scrollHeight; 
+}
+
+if (chatForm) {
+  chatForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!uploadedDocId) return;
+
+    const input = document.getElementById("chat-input");
+    const question = input.value.trim();
+    if (!question) return;
+
+    appendChatMessage("You", question);
+    input.value = "";
+    
+    const loadingId = "loading-" + Date.now();
+    const loadingBubble = document.createElement("div");
+    loadingBubble.id = loadingId;
+    loadingBubble.style.alignSelf = "flex-start";
+    loadingBubble.style.color = "#8a8a9a";
+    loadingBubble.style.fontSize = "13px";
+    loadingBubble.innerText = "AI is thinking...";
+    chatLog.appendChild(loadingBubble);
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    try {
+      const res = await fetch(`/documents/${uploadedDocId}/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question })
+      });
+
+      if (!res.ok) throw new Error("Failed to get answer");
+      
+      const data = await res.json();
+      document.getElementById(loadingId).remove();
+      appendChatMessage("AI", data.answer);
+
+    } catch (error) {
+      console.error(error);
+      document.getElementById(loadingId).remove();
+      appendChatMessage("System Error", "Failed to connect to AI. Please try again.");
+    }
+  });
+}
+
+// Clear Chat Button Logic
+if (clearChatBtn) {
+  clearChatBtn.addEventListener("click", () => {
+    chatLog.innerHTML = ""; 
+  });
+}
+
+/* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", loadHistory);
