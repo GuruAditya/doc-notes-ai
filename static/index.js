@@ -1,3 +1,74 @@
+/* ================= UI NOTIFICATIONS & MODALS (NO BROWSER ALERTS) ================= */
+function showToast(message, isError = false) {
+  const toast = document.createElement('div');
+  toast.innerText = message;
+  toast.style.position = 'fixed';
+  toast.style.bottom = '20px';
+  toast.style.right = '20px';
+  toast.style.backgroundColor = isError ? '#ff5c5c' : '#7289da';
+  toast.style.color = '#fff';
+  toast.style.padding = '12px 20px';
+  toast.style.borderRadius = '6px';
+  toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+  toast.style.zIndex = '10000';
+  toast.style.opacity = '0';
+  toast.style.transform = 'translateY(20px)';
+  toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
+  document.body.appendChild(toast);
+
+  // Trigger slide-in
+  setTimeout(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+  }, 10);
+
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(20px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function showDeleteModal(onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0'; overlay.style.left = '0';
+  overlay.style.width = '100%'; overlay.style.height = '100%';
+  overlay.style.backgroundColor = 'rgba(0,0,0,0.6)';
+  overlay.style.display = 'flex'; 
+  overlay.style.alignItems = 'center'; 
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = '9999';
+
+  const box = document.createElement('div');
+  box.style.backgroundColor = '#2a2a35';
+  box.style.padding = '25px';
+  box.style.borderRadius = '10px';
+  box.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
+  box.style.textAlign = 'center';
+  box.style.color = '#e0e0e6';
+
+  box.innerHTML = `
+    <h3 style="margin-top: 0; margin-bottom: 10px; color: #fff;">Delete Note?</h3>
+    <p style="margin-top: 0; margin-bottom: 25px; font-size: 14px; color: #a0a0b0;">This action cannot be undone.</p>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button id="modal-cancel" style="background: #3e3f46; padding: 10px 20px; flex: 1;">Cancel</button>
+      <button id="modal-confirm" style="background: #ff5c5c; padding: 10px 20px; flex: 1;">Delete</button>
+    </div>
+  `;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  document.getElementById('modal-cancel').onclick = () => overlay.remove();
+  document.getElementById('modal-confirm').onclick = () => {
+    overlay.remove();
+    onConfirm();
+  };
+}
+
 /* ================= UI & SIDEBAR ================= */
 const hamburger = document.querySelector(".hamburger-menu");
 const sidebar = document.getElementById("sidebar");
@@ -22,11 +93,8 @@ document.addEventListener("click", () => {
   if (layout) layout.classList.remove("shifted");
 });
 
-if (sidebar) {
-  sidebar.addEventListener("click", (event) => {
-    event.stopPropagation();
-  });
-}
+if (sidebar) sidebar.addEventListener("click", (event) => event.stopPropagation());
+
 
 /* ================= CORE STATE & ELEMENTS ================= */
 const form = document.getElementById("upload-form");  
@@ -34,6 +102,7 @@ const result = document.getElementById("result");
 const summarizeBtn = document.getElementById("summarizeBtn");
 
 let uploadedDocId = null;  
+
 
 /* ================= DOCUMENT HISTORY ================= */
 async function loadHistory() {
@@ -53,9 +122,7 @@ async function loadHistory() {
 
     historyList.innerHTML = docs.map(doc => `
       <div class="history-item-wrapper">
-        <a href="#" class="history-item" data-id="${doc.id}">
-          📄 ${doc.filename}
-        </a>
+        <a href="#" class="history-item" data-id="${doc.id}">📄 ${doc.filename}</a>
         <button class="delete-btn" data-id="${doc.id}" title="Delete entry">🗑️</button>
       </div>
     `).join("");
@@ -74,9 +141,10 @@ async function loadHistory() {
         e.stopPropagation(); 
         const docId = btn.getAttribute("data-id");
         
-        if (confirm("Are you sure you want to permanently delete this document and its data?")) {
+        // Re-using our new modal logic for the sidebar deletion too!
+        showDeleteModal(async () => {
           await deleteHistoryEntry(docId);
-        }
+        });
       });
     });
 
@@ -89,14 +157,11 @@ async function loadPreviousDoc(id, filename) {
   uploadedDocId = id; 
   result.innerText = `Loading cached summary for: ${filename}...`;
   
-  // Show panels immediately (Both set to 'flex' for the 3-column layout)
   document.getElementById("comments-section").style.display = "flex"; 
   document.getElementById("chat-section").style.display = "flex";    
   
-  // Load database comments
   loadComments(id);
   
-  // Close sidebar
   if (sidebar) sidebar.classList.remove("active");
   if (hamburger) hamburger.classList.remove("active");
   if (layout) layout.classList.remove("shifted");
@@ -106,7 +171,6 @@ async function loadPreviousDoc(id, filename) {
     if (!res.ok) throw new Error(`Server Error: ${res.status} ${res.statusText}`);
 
     const data = await res.json();
-    
     if (data.summary) {
         result.innerText = `📄 Document: ${filename}\n\n${data.summary}`;
     } else {
@@ -123,7 +187,6 @@ async function deleteHistoryEntry(id) {
     const res = await fetch(`/history/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error("Failed to delete document from backend storage");
 
-    // If the user deleted the file they are currently looking at, clear the screen
     if (uploadedDocId === id) {
       uploadedDocId = null;
       document.getElementById("result").innerText = "The active document was deleted.";
@@ -131,11 +194,12 @@ async function deleteHistoryEntry(id) {
       document.getElementById("chat-section").style.display = "none";
     }
     loadHistory();
+    showToast("Document successfully deleted");
   } catch (error) {
-    console.error(error);
-    alert("Error deleting file: " + error.message);
+    showToast("Error deleting file.", true);
   }
 }
+
 
 /* ================= NOTEBOOK COMMENTS ================= */
 async function loadComments(docId) {
@@ -143,7 +207,6 @@ async function loadComments(docId) {
   if (!commentsList) return;
 
   try {
-    // Cache buster included: ?t=${Date.now()}
     const res = await fetch(`/documents/${docId}/comments?t=${Date.now()}`);
     if (!res.ok) throw new Error("Failed to load comments");
 
@@ -155,24 +218,18 @@ async function loadComments(docId) {
     }
 
     commentsList.innerHTML = comments.map(c => {
-      // Formatted to proper local time zone
       const date = new Date(c.created_at).toLocaleString(undefined, { 
-        month: 'short', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit' 
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
       });
       return `
-        <div class="comment-card">
+        <div class="comment-card" id="comment-card-${c.id}">
           <div class="comment-header">
              <span style="font-size: 11px; color: #666; font-weight: 500;">${date}</span>
-             
              <div class="comment-actions">
                <button class="comment-action-btn edit-note-btn" data-id="${c.id}" title="Edit note">✏️</button>
                <button class="comment-action-btn delete-note-btn" data-id="${c.id}" title="Delete note">🗑️</button>
              </div>
           </div>
-          
           <p id="comment-text-${c.id}">${c.text}</p>
         </div>
       `;
@@ -203,13 +260,12 @@ if (commentForm) {
       input.value = ""; 
       loadComments(uploadedDocId); 
     } catch (error) {
-      console.error(error);
-      alert("Error saving comment: " + error.message);
+      showToast("Error saving comment.", true);
     }
   });
 }
 
-// Handle Editing and Deleting Individual Notes
+// Handle Editing and Deleting Individual Notes (Native UI Updates)
 const commentsList = document.getElementById("comments-list");
 if (commentsList) {
   commentsList.addEventListener("click", async (e) => {
@@ -218,38 +274,108 @@ if (commentsList) {
     const deleteBtn = e.target.closest(".delete-note-btn");
     if (deleteBtn) {
       const cId = deleteBtn.getAttribute("data-id");
-      if (!cId || cId === "undefined") return alert("Old comments without IDs cannot be deleted.");
+      if (!cId || cId === "undefined") return showToast("Old comments without IDs cannot be modified.", true);
       
-      if (confirm("Are you sure you want to delete this note?")) {
+      showDeleteModal(async () => {
         try {
           await fetch(`/documents/${uploadedDocId}/comments/${cId}`, { method: 'DELETE' });
           loadComments(uploadedDocId); 
-        } catch (err) { alert("Failed to delete note."); }
-      }
+          showToast("Note deleted.");
+        } catch (err) { showToast("Failed to delete note.", true); }
+      });
     }
 
-    // Check if the user clicked the Pencil icon
+    // Check if the user clicked the Pencil icon (Inline Edit)
     const editBtn = e.target.closest(".edit-note-btn");
     if (editBtn) {
       const cId = editBtn.getAttribute("data-id");
-      if (!cId || cId === "undefined") return alert("Old comments without IDs cannot be edited.");
+      if (!cId || cId === "undefined") return showToast("Old comments without IDs cannot be modified.", true);
       
-      const currentText = document.getElementById(`comment-text-${cId}`).innerText;
-      const newText = prompt("Edit your note:", currentText);
+      const pTag = document.getElementById(`comment-text-${cId}`);
+      const actionBtns = pTag.parentNode.querySelector(".comment-actions");
+      const currentText = pTag.innerText;
 
-      if (newText !== null && newText.trim() !== "" && newText !== currentText) {
-        try {
-          await fetch(`/documents/${uploadedDocId}/comments/${cId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: newText.trim() })
-          });
-          loadComments(uploadedDocId); 
-        } catch (err) { alert("Failed to edit note."); }
-      }
+      // Create Inline Textarea
+      const editContainer = document.createElement("div");
+      editContainer.style.marginTop = "8px";
+
+      const textarea = document.createElement("textarea");
+      textarea.value = currentText;
+      textarea.style.width = "100%";
+      textarea.style.minHeight = "60px";
+      textarea.style.padding = "8px";
+      textarea.style.borderRadius = "4px";
+      textarea.style.border = "1px solid #7289da";
+      textarea.style.background = "#1e1e24";
+      textarea.style.color = "#fff";
+      textarea.style.fontFamily = "inherit";
+      textarea.style.fontSize = "13px";
+      textarea.style.boxSizing = "border-box";
+      textarea.style.resize = "vertical";
+
+      // Create Buttons
+      const btnGroup = document.createElement("div");
+      btnGroup.style.display = "flex";
+      btnGroup.style.gap = "8px";
+      btnGroup.style.justifyContent = "flex-end";
+      btnGroup.style.marginTop = "8px";
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.innerText = "Cancel";
+      cancelBtn.style.padding = "6px 12px";
+      cancelBtn.style.background = "#3e3f46";
+      cancelBtn.style.fontSize = "12px";
+      cancelBtn.style.flex = "none"; // Override generic button stretch
+
+      const saveBtn = document.createElement("button");
+      saveBtn.innerText = "Save";
+      saveBtn.style.padding = "6px 12px";
+      saveBtn.style.background = "#248046";
+      saveBtn.style.fontSize = "12px";
+      saveBtn.style.flex = "none"; // Override generic button stretch
+
+      btnGroup.appendChild(cancelBtn);
+      btnGroup.appendChild(saveBtn);
+      editContainer.appendChild(textarea);
+      editContainer.appendChild(btnGroup);
+
+      // Swap UI elements
+      pTag.style.display = "none";
+      if (actionBtns) actionBtns.style.display = "none";
+      pTag.parentNode.insertBefore(editContainer, pTag.nextSibling);
+
+      // Handle Cancel
+      cancelBtn.onclick = () => {
+        editContainer.remove();
+        pTag.style.display = "block";
+        if (actionBtns) actionBtns.style.display = "flex";
+      };
+
+      // Handle Save
+      saveBtn.onclick = async () => {
+        const newText = textarea.value.trim();
+        if (newText && newText !== currentText) {
+          saveBtn.innerText = "Saving...";
+          try {
+            await fetch(`/documents/${uploadedDocId}/comments/${cId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: newText })
+            });
+            loadComments(uploadedDocId); 
+            showToast("Note updated.");
+          } catch (err) { 
+            showToast("Failed to update note.", true); 
+            saveBtn.innerText = "Save";
+          }
+        } else {
+          cancelBtn.click(); // Nothing changed, just close it
+        }
+      };
     }
   });
 }
+
 
 /* ================= UPLOAD & SUMMARIZE ================= */
 if (form) {
@@ -268,7 +394,6 @@ if (form) {
     result.innerText = "Uploading PDF...";
     uploadedDocId = null;
     
-    // Hide panels while uploading
     document.getElementById("comments-section").style.display = "none"; 
     document.getElementById("chat-section").style.display = "none"; 
 
@@ -281,18 +406,16 @@ if (form) {
             result.innerText = data.message || "Upload successful.";
             loadHistory(); 
             
-            // Show panels for the newly uploaded file (Both set to 'flex')
             document.getElementById("comments-section").style.display = "flex";
             document.getElementById("chat-section").style.display = "flex";
             loadComments(uploadedDocId);
             
-            // Wipe old chat visually
             document.getElementById("chat-log").innerHTML = "";
+            showToast("Document uploaded successfully");
         } else {
             result.innerText = data.error || "Upload failed.";
         }
     } catch (error) {
-        console.error(error);
         result.innerText = "Upload failed. Check console.";
     }
   });
@@ -319,6 +442,7 @@ if (summarizeBtn) {
     }
   });
 }
+
 
 /* ================= AI CHAT LOGIC ================= */
 const chatForm = document.getElementById("chat-form");
