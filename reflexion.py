@@ -9,7 +9,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.types import RetryPolicy
 
-from chains import generate_chain, reflect_chain
+from chains import generate_chain, reflect_chain,qa_chain
 
 class MessageGraph(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]

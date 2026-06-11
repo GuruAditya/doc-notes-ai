@@ -1,0 +1,35 @@
+[33mcommit 7848a6f49b5d9bd98c7e58796c7b5fafc14c1ef5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: Aditya <adityagururani120230@gmail.com>
+Date:   Wed Jun 10 12:08:16 2026 +0530
+
+    some design improvement
+
+[33mcommit 12e91b69b550ff72ab973b03d124b26c327ae9ba[m
+Author: Aditya <adityagururani120230@gmail.com>
+Date:   Wed Jun 10 11:50:46 2026 +0530
+
+    Moved the comment section to the right side of the page
+
+[33mcommit a1e81f2654a8b09175183d2aff9a884855f55e35[m
+Author: Aditya <adityagururani120230@gmail.com>
+Date:   Wed Jun 10 11:38:35 2026 +0530
+
+    added the comment functionality
+
+[33mcommit aeb0849c3b0483a4ee4ef6ffd0a3d6304528494a[m
+Author: Aditya <adityagururani120230@gmail.com>
+Date:   Wed Jun 10 11:08:58 2026 +0530
+
+    Code without Comment section
+
+[33mcommit 46cd5e33c015a9a9aa6a747ad7d6bf9dd565a714[m
+Author: Aditya <adityagururani120230@gmail.com>
+Date:   Sat Jan 24 12:20:37 2026 +0530
+
+    Basic Website
+
+[33mcommit b5b8cc87e7c9683039a9ad057fbd13e1ed92448f[m
+Author: Aditya <adityagururani120230@gmail.com>
+Date:   Sat Jan 24 12:06:23 2026 +0530
+
+    first commit

@@ -171,3 +171,39 @@ async def get_comments(doc_id: str):
         raise HTTPException(status_code=404, detail="Document not found")
 
     return doc.get("comments") or []
+
+    # Don't forget to import the new chain at the top of your app.py!
+# from chains import generate_chain, reflect_chain, qa_chain 
+
+# ================= NEW: ASK AI ENDPOINT =================
+@app.post("/documents/{doc_id}/ask")
+async def ask_document_question(doc_id: str, payload: dict):
+    question = payload.get("question", "").strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
+
+    try:
+        object_id = ObjectId(doc_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+    # 1. Fetch the raw document text from MongoDB
+    doc = await records.find_one({"_id": object_id}, {"content": 1})
+    if not doc or not doc.get("content"):
+        raise HTTPException(status_code=404, detail="Document content not found")
+
+    try:
+        # 2. Feed the document text and the user's question to Gemini
+        from chains import qa_chain # Ensure it's imported
+        
+        response = qa_chain.invoke({
+            "context": doc["content"],
+            "question": question
+        })
+        
+        return {"answer": response.content}
+        
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+# ========================================================

@@ -45,3 +45,18 @@ reflection_prompt = ChatPromptTemplate.from_messages(
 
 generate_chain = generation_prompt | llm
 reflect_chain = reflection_prompt | llm
+
+qa_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a helpful AI assistant. Your job is to answer the user's questions based strictly on the provided document content.\n"
+            "If the answer is not contained in the document, politely say 'I cannot find the answer to that in the current document.'\n\n"
+            "Document Content:\n{context}"
+        ),
+        ("human", "{question}")
+    ]
+)
+
+# Export this new chain so we can use it in app.py
+qa_chain = qa_prompt | llm
