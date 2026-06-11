@@ -12,7 +12,7 @@ from io import BytesIO
 from datetime import datetime, timezone
 from pathlib import Path
 import traceback
-
+import uuid
 from reflexion import graph
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -145,6 +145,7 @@ async def add_comment(doc_id: str, payload: dict):
         raise HTTPException(status_code=400, detail="Invalid document ID format")
 
     new_comment = {
+        "id": uuid.uuid4().hex, 
         "text": comment_text,
         "created_at": datetime.now(timezone.utc)
     }
@@ -159,6 +160,7 @@ async def add_comment(doc_id: str, payload: dict):
 
     return {"message": "Comment added successfully", "comment": new_comment}
 
+
 @app.get("/documents/{doc_id}/comments")
 async def get_comments(doc_id: str):
     try:
@@ -172,8 +174,46 @@ async def get_comments(doc_id: str):
 
     return doc.get("comments") or []
 
-    # Don't forget to import the new chain at the top of your app.py!
-# from chains import generate_chain, reflect_chain, qa_chain 
+# 2. Add this NEW route to handle EDITING
+@app.put("/documents/{doc_id}/comments/{comment_id}")
+async def edit_comment(doc_id: str, comment_id: str, payload: dict):
+    new_text = payload.get("text", "").strip()
+    if not new_text:
+        raise HTTPException(status_code=400, detail="Comment cannot be empty")
+        
+    try:
+        object_id = ObjectId(doc_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+    result = await records.update_one(
+        {"_id": object_id, "comments.id": comment_id},
+        {"$set": {"comments.$.text": new_text}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Comment not found")
+        
+    return {"message": "Comment updated successfully"}
+
+# 3. Add this NEW route to handle DELETING
+@app.delete("/documents/{doc_id}/comments/{comment_id}")
+async def delete_comment(doc_id: str, comment_id: str):
+    try:
+        object_id = ObjectId(doc_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+    result = await records.update_one(
+        {"_id": object_id},
+        {"$pull": {"comments": {"id": comment_id}}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    return {"message": "Comment deleted successfully"}
+
 
 # ================= NEW: ASK AI ENDPOINT =================
 @app.post("/documents/{doc_id}/ask")

@@ -164,8 +164,16 @@ async function loadComments(docId) {
       });
       return `
         <div class="comment-card">
-          <p>${c.text}</p>
-          <span style="font-size: 11px; color: #666; font-weight: 500;">${date}</span>
+          <div class="comment-header">
+             <span style="font-size: 11px; color: #666; font-weight: 500;">${date}</span>
+             
+             <div class="comment-actions">
+               <button class="comment-action-btn edit-note-btn" data-id="${c.id}" title="Edit note">✏️</button>
+               <button class="comment-action-btn delete-note-btn" data-id="${c.id}" title="Delete note">🗑️</button>
+             </div>
+          </div>
+          
+          <p id="comment-text-${c.id}">${c.text}</p>
         </div>
       `;
     }).join("");
@@ -197,6 +205,48 @@ if (commentForm) {
     } catch (error) {
       console.error(error);
       alert("Error saving comment: " + error.message);
+    }
+  });
+}
+
+// Handle Editing and Deleting Individual Notes
+const commentsList = document.getElementById("comments-list");
+if (commentsList) {
+  commentsList.addEventListener("click", async (e) => {
+    
+    // Check if the user clicked the Trash icon
+    const deleteBtn = e.target.closest(".delete-note-btn");
+    if (deleteBtn) {
+      const cId = deleteBtn.getAttribute("data-id");
+      if (!cId || cId === "undefined") return alert("Old comments without IDs cannot be deleted.");
+      
+      if (confirm("Are you sure you want to delete this note?")) {
+        try {
+          await fetch(`/documents/${uploadedDocId}/comments/${cId}`, { method: 'DELETE' });
+          loadComments(uploadedDocId); 
+        } catch (err) { alert("Failed to delete note."); }
+      }
+    }
+
+    // Check if the user clicked the Pencil icon
+    const editBtn = e.target.closest(".edit-note-btn");
+    if (editBtn) {
+      const cId = editBtn.getAttribute("data-id");
+      if (!cId || cId === "undefined") return alert("Old comments without IDs cannot be edited.");
+      
+      const currentText = document.getElementById(`comment-text-${cId}`).innerText;
+      const newText = prompt("Edit your note:", currentText);
+
+      if (newText !== null && newText.trim() !== "" && newText !== currentText) {
+        try {
+          await fetch(`/documents/${uploadedDocId}/comments/${cId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: newText.trim() })
+          });
+          loadComments(uploadedDocId); 
+        } catch (err) { alert("Failed to edit note."); }
+      }
     }
   });
 }

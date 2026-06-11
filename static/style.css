@@ -372,3 +372,40 @@ button:active {
   background: #4a4a5a;
   border-radius: 4px;
 }
+
+
+/* ================= NOTEBOOK ACTION BUTTONS ================= */
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.2s ease;
+}
+
+/* Appear when the mouse hovers over the comment card */
+.comment-card:hover .comment-actions {
+  opacity: 1; 
+}
+
+.comment-action-btn {
+  background: none !important;
+  border: none !important;
+  cursor: pointer;
+  font-size: 12px !important;
+  padding: 0 !important;
+  color: #8a8a9a !important;
+  transition: transform 0.2s ease, color 0.2s ease !important;
+  max-width: fit-content !important;
+}
+
+.comment-action-btn:hover {
+  color: #fff !important;
+  transform: scale(1.1);
+}
