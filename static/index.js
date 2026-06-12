@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-    const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyBWlY0X2xl_39rrvb9A6cqhmReZqmdP_Lg",
   authDomain: "ai-docs-c8f3e.firebaseapp.com",
   projectId: "ai-docs-c8f3e",
@@ -49,6 +49,50 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("app-container").style.display = "none";
   }
 });
+
+// --- UPDATED: Fetch the PDF through our own backend (proxy) using docId, ---
+// --- so we avoid CORS issues with Cloudinary's secure_url. ---
+function displayDocumentPreview(docId, filename) {
+  const container = document.getElementById("preview-container");
+  const windowDiv = document.getElementById("viewer-window");
+
+  if (!docId) {
+    if (container) container.style.display = "none";
+    return;
+  }
+
+  if (container) container.style.display = "block";
+
+  if (windowDiv) {
+    // Show a loading state while we fetch the bytes
+    windowDiv.innerHTML = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; color: #8a8a9a; font-size: 14px;">Loading secure preview...</div>`;
+
+    // Fetch the file through our backend proxy (auth required, ownership checked server-side)
+    fetch(`/document/${docId}/file`, { headers: getAuthHeaders() })
+      .then(response => {
+        if (!response.ok) throw new Error("Could not fetch file");
+        return response.blob();
+      })
+      .then(blob => {
+        // Create a secure local URL for the iframe
+        const blobUrl = URL.createObjectURL(blob);
+        // #view=FitH tells the PDF to fit cleanly to the width of the window
+        windowDiv.innerHTML = `
+          <div style="position: relative; width: 100%; height: 100%;">
+            <a href="${blobUrl}" target="_blank" rel="noopener" title="Open in new tab"
+               style="position: absolute; top: 8px; right: 8px; z-index: 10; background: #2a2a35; color: #e0e0e6; border: 1px solid #4a4a5a; padding: 6px 10px; border-radius: 6px; font-size: 12px; text-decoration: none;">
+              ↗ Open in new tab
+            </a>
+            <iframe src="${blobUrl}#view=FitH" width="100%" height="100%" style="border: none; background: #fff;" title="${filename}"></iframe>
+          </div>
+        `;
+      })
+      .catch(error => {
+        console.error("Preview fetch error:", error);
+        windowDiv.innerHTML = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; color: #ff5c5c; font-size: 14px;">Unable to load preview.</div>`;
+      });
+  }
+}
 
 // Auth Button Click Handlers
 document.getElementById("login-btn").onclick = () => signInWithPopup(auth, provider);
@@ -183,7 +227,7 @@ async function loadHistory() {
 
 async function loadPreviousDoc(id, filename) {
   uploadedDocId = id; 
-  result.innerText = `Loading cached summary for: ${filename}...`;
+  result.innerText = `Loading document details for: ${filename}...`;
   document.getElementById("comments-section").style.display = "flex"; 
   document.getElementById("chat-section").style.display = "flex";    
   loadComments(id);
@@ -193,11 +237,18 @@ async function loadPreviousDoc(id, filename) {
   if (layout) layout.classList.remove("shifted");
 
   try {
-    const res = await fetch(`/summarize/${id}`, { headers: getAuthHeaders() });  
+    // --- UPDATED: Fetch from /document instead of /summarize ---
+    const res = await fetch(`/document/${id}`, { headers: getAuthHeaders() });  
     if (!res.ok) throw new Error(`Server Error: ${res.status}`);
 
     const data = await res.json();
-    result.innerText = data.summary ? `📄 Document: ${filename}\n\n${data.summary}` : `Selected: ${filename}\n\nThis document hasn't been summarized yet. Click the "Summarize Document" button below to generate one.`;
+    
+    // --- NEW: Trigger the preview window (proxied via backend using docId) ---
+    displayDocumentPreview(data.id, data.filename);
+    
+    result.innerText = data.summary 
+        ? `📄 Summary for ${filename}:\n\n${data.summary}` 
+        : `Selected: ${filename}\n\nThis document hasn't been summarized yet. Click the "Generate Summary" button below.`;
   } catch (error) { result.innerText = `Error loading document "${filename}": ` + error.message; }
 }
 
@@ -211,6 +262,7 @@ async function deleteHistoryEntry(id) {
       document.getElementById("result").innerText = "The active document was deleted.";
       document.getElementById("comments-section").style.display = "none";
       document.getElementById("chat-section").style.display = "none";
+      displayDocumentPreview(null, null); // Hide preview
     }
     loadHistory();
     showToast("Document successfully deleted");
@@ -347,6 +399,10 @@ if (form) {
         if (data.id) {
             uploadedDocId = data.id; result.innerText = data.message || "Upload successful.";
             loadHistory(); 
+            
+            // --- NEW: Trigger preview right after upload (proxied via backend using docId) ---
+            displayDocumentPreview(data.id, data.filename);
+
             document.getElementById("comments-section").style.display = "flex"; document.getElementById("chat-section").style.display = "flex";
             loadComments(uploadedDocId); document.getElementById("chat-log").innerHTML = ""; showToast("Document uploaded successfully");
         } else { result.innerText = data.error || "Upload failed."; }

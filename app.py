@@ -17,6 +17,9 @@ from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from io import BytesIO
 
+import httpx
+from fastapi.responses import StreamingResponse
+
 # Firebase & LangChain Imports
 import firebase_admin
 from firebase_admin import credentials, auth
@@ -74,8 +77,10 @@ async def upload_file(file: UploadFile = File(...), uid: str = Depends(get_curre
         upload_result = cloudinary.uploader.upload(
             file_bytes,
             resource_type="raw",
+            type="authenticated",
             folder="pdf_summarizer/",
-            public_id=file.filename
+            public_id=file.filename,
+            format="pdf"
         )
 
         # SAVE THE FILE WITH THE USER'S ID
@@ -90,7 +95,12 @@ async def upload_file(file: UploadFile = File(...), uid: str = Depends(get_curre
         }
         result = await records.insert_one(data)
 
-        return {"id": str(result.inserted_id), "message": "File stored successfully"}
+        return {
+            "id": str(result.inserted_id), 
+            "message": "File stored successfully",
+            "cloudinary_url": upload_result.get("secure_url"), # <--- Added this
+            "filename": file.filename                          # <--- Added this
+        }
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
@@ -105,6 +115,22 @@ async def get_upload_history(uid: str = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
 
+@app.get("/document/{doc_id}")
+async def get_document(doc_id: str, uid: str = Depends(get_current_user)):
+    try:
+        doc = await records.find_one({"_id": ObjectId(doc_id), "owner_id": uid})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found or unauthorized")
+        
+        return {
+            "id": str(doc["_id"]),
+            "filename": doc["filename"],
+            "cloudinary_url": doc.get("cloudinary_url"),
+            "summary": doc.get("summary")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 @app.get("/summarize/{doc_id}")
 async def summarize_document(
@@ -217,3 +243,37 @@ async def ask_document_question(doc_id: str, payload: dict, uid: str = Depends(g
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    
+    
+@app.get("/document/{doc_id}/file")
+async def get_document_file(doc_id: str, uid: str = Depends(get_current_user)):
+    doc = await records.find_one({"_id": ObjectId(doc_id), "owner_id": uid})
+    if not doc or not doc.get("cloudinary_url"):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    public_id = doc["cloudinary_id"]
+    if public_id.lower().endswith(".pdf"):
+        public_id = public_id[:-4]
+
+    signed_url, _ = cloudinary.utils.cloudinary_url(
+        public_id,
+        resource_type="raw",
+        type="authenticated",
+        sign_url=True,
+        format="pdf"
+    )
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(signed_url)
+
+    if resp.status_code != 200:
+        print(f"[PREVIEW DEBUG] URL: {signed_url}")
+        print(f"[PREVIEW DEBUG] Status: {resp.status_code}")
+        print(f"[PREVIEW DEBUG] Body: {resp.text[:500]}")
+        raise HTTPException(status_code=502, detail=f"Failed to fetch file from storage (status {resp.status_code})")
+
+    return StreamingResponse(
+        iter([resp.content]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{doc["filename"]}"'}
+    )
