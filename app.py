@@ -23,6 +23,7 @@ from firebase_admin import credentials, auth
 from langchain_core.messages import HumanMessage
 from reflexion import graph
 from chains import qa_chain
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv()
 
@@ -61,6 +62,8 @@ client = AsyncIOMotorClient(os.getenv("MONGODB_URL"))
 db = client.pdf_assistant
 records = db.summaries
 
+
+simple_llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash")
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...), uid: str = Depends(get_current_user)):
     try:
@@ -102,6 +105,29 @@ async def get_upload_history(uid: str = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
 
+# @app.get("/summarize/{doc_id}")
+# async def summarize_document(doc_id: str, uid: str = Depends(get_current_user)):
+#     try:
+#         object_id = ObjectId(doc_id)
+#         # VERIFY OWNERSHIP BEFORE SUMMARIZING
+#         doc = await records.find_one({"_id": object_id, "owner_id": uid})
+#         if not doc:
+#             raise HTTPException(status_code=404, detail="Document not found or unauthorized")
+
+#         if doc.get("summary"):
+#             return {"summary": doc["summary"], "cached": True}
+
+#         inputs = {"messages": [HumanMessage(content=f"Summarize this:\n{doc['content']}")]}
+#         response = graph.invoke(inputs)
+#         final_summary = response["messages"][-1].content
+
+#         await records.update_one({"_id": object_id}, {"$set": {"summary": final_summary}})
+#         return {"summary": final_summary, "cached": False}
+#     except Exception as e:
+#         traceback.print_exc()
+#         raise HTTPException(status_code=500, detail=str(e))
+    
+
 @app.get("/summarize/{doc_id}")
 async def summarize_document(doc_id: str, uid: str = Depends(get_current_user)):
     try:
@@ -111,19 +137,47 @@ async def summarize_document(doc_id: str, uid: str = Depends(get_current_user)):
         if not doc:
             raise HTTPException(status_code=404, detail="Document not found or unauthorized")
 
+        # RETURN CACHED SUMMARY IF IT EXISTS
         if doc.get("summary"):
             return {"summary": doc["summary"], "cached": True}
 
-        inputs = {"messages": [HumanMessage(content=f"Summarize this:\n{doc['content']}")]}
-        response = graph.invoke(inputs)
-        final_summary = response["messages"][-1].content
+        # =================================================================
+        # OPTION 1: Simple API Call (CURRENTLY ACTIVE)
+        # =================================================================
+        prompt = f"Please write a clear, well-structured, and comprehensive summary of the following document:\n\n{doc['content']}"
+        
+        # Calling your Gemini 3.5 Flash model
+        response = simple_llm.invoke(prompt)
+        
+        # STRICT STRING EXTRACTION (Fixes the [object Object] error)
+        raw_content = response.content
+        if isinstance(raw_content, list):
+            # If the AI returns a list of blocks, extract just the text
+            final_summary = "\n".join([block.get("text", "") for block in raw_content if isinstance(block, dict)])
+        elif isinstance(raw_content, dict):
+            # If it returns a dictionary, grab the text key
+            final_summary = raw_content.get("text", str(raw_content))
+        else:
+            # If it is already a string, keep it as is
+            final_summary = str(raw_content)
 
+        # =================================================================
+        # OPTION 2: LangGraph Reflexion Agent (COMMENTED OUT FOR LATER)
+        # =================================================================
+        # inputs = {"messages": [HumanMessage(content=f"Summarize this:\n{doc['content']}")]}
+        # response = graph.invoke(inputs)
+        # final_summary = response["messages"][-1].content
+        # =================================================================
+
+        # SAVE TO MONGODB
         await records.update_one({"_id": object_id}, {"$set": {"summary": final_summary}})
         return {"summary": final_summary, "cached": False}
+        
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     
+         
 @app.delete("/history/{doc_id}")
 async def delete_document(doc_id: str, uid: str = Depends(get_current_user)):
     try:
