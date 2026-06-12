@@ -2,87 +2,108 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Document Summarizer</title>
+  <title>Document AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
   <script type="module" src="/static/index.js" defer></script>
 </head>
 <body>
 
-<div id="auth-banner" style="background: #141419; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #252530; position: fixed; top: 0; width: 100%; z-index: 2000; box-sizing: border-box;">
-  <h2 style="margin: 0; color: #fff; font-size: 18px;">📄 Document AI</h2>
+<!-- TOP NAV with hamburger INSIDE it -->
+<div id="auth-banner" style="background: rgba(10,15,15,0.9); padding: 0 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(45,212,191,0.07); position: fixed; top: 0; width: 100%; height: 60px; z-index: 2000; box-sizing: border-box; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); gap: 16px;">
+  <!-- Hamburger sits inside nav so it inherits the same stacking context -->
+  <div class="hamburger-menu" style="position: relative; top: auto; left: auto; flex-shrink: 0;">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </div>
+  <h2 style="margin: 0; font-size: 17px; font-weight: 600; background: linear-gradient(135deg, #e8f5f5 30%, #2dd4bf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">📄 Document AI</h2>
   <div>
-    <div id="login-group">
-      <button id="guest-btn" style="background-color: #3e3f46; color: #e0e0e6; padding: 8px 16px; margin-right: 10px; border: 1px solid #4a4a5a;">Continue as Guest</button>
-      <button id="login-btn" style="background-color: #4285F4; padding: 8px 16px; margin: 0;">Sign in with Google</button>
+    <div id="login-group" style="display: flex; align-items: center; gap: 10px;">
+      <button id="guest-btn" style="background: transparent; border: 1px solid rgba(45,212,191,0.15); color: #7aa8a8; padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; margin: 0;">Continue as Guest</button>
+      <button id="login-btn" style="background: linear-gradient(135deg, #4285F4, #3367d6); border: none; color: #fff; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; box-shadow: 0 2px 12px rgba(66,133,244,0.3); margin: 0;">Sign in with Google</button>
     </div>
-    
-    <div id="user-info" style="display: none; align-items: center; gap: 15px;">
-      <span id="user-email" style="color: #a0a0b0; font-size: 14px;"></span>
-      <button id="logout-btn" style="background-color: #3e3f46; padding: 8px 16px; margin: 0;">Sign Out</button>
+    <div id="user-info" style="display: none; align-items: center; gap: 12px;">
+      <span id="user-email" style="color: #7aa8a8; font-size: 13px;"></span>
+      <button id="logout-btn" style="background: transparent; border: 1px solid rgba(45,212,191,0.07); color: #7aa8a8; padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; margin: 0;">Sign Out</button>
     </div>
   </div>
 </div>
 
-<div class="hamburger-menu" style="top: 75px;"> <span class="bar"></span>
-  <span class="bar"></span>
-  <span class="bar"></span>
-</div>
-
+<!-- SIDEBAR -->
 <div id="sidebar" class="sidebar">
-  <a href="/" class="sidebar-logo">📁 Document History</a>
-  <hr style="border-color: #252530; margin: 10px 0;">
+  <a href="/" class="sidebar-logo">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    History
+  </a>
+  <hr style="border: none; border-top: 1px solid rgba(45,212,191,0.07); margin: 4px 16px 8px;">
   <div id="history-list">
-    <span class="no-history">No documents uploaded yet</span>
+    <span class="no-history">No documents yet</span>
   </div>
 </div>
 
-<div id="app-container" style="display: none; padding-top: 60px;">
+<!-- MAIN APP -->
+<div id="app-container" style="display: none;">
   <div id="layout">
-    
+
+    <!-- AI CHAT PANEL -->
     <div id="chat-section" style="display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 style="color: #fff; margin: 0;">💬 Ask AI</h3>
-        <button id="clear-chat-btn" style="background: transparent; border: 1px solid #4a4a5a; color: #a0a0b0; padding: 5px 10px; font-size: 12px; border-radius: 4px; cursor: pointer;">Clear</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid rgba(45,212,191,0.07);">
+        <h3 style="color: #e8f5f5; margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+          <span style="display: inline-flex; width: 22px; height: 22px; background: rgba(45,212,191,0.1); border-radius: 5px; align-items: center; justify-content: center; font-size: 12px;">✦</span>
+          Ask AI
+        </h3>
+        <button id="clear-chat-btn" style="background: transparent; border: 1px solid rgba(45,212,191,0.1); color: #3d6060; padding: 4px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; flex: none; margin: 0;">Clear</button>
       </div>
       <div id="chat-log"></div>
-      <form id="chat-form" style="display: flex; gap: 10px; margin-top: auto;">
-        <input type="text" id="chat-input" placeholder="Ask a question..." required style="flex: 1; padding: 12px; border-radius: 6px; border: 1px solid #4a4a5a; background: #141419; color: #fff; outline: none;">
-        <button type="submit" style="max-width: 80px; padding: 12px;">Ask</button>
+      <form id="chat-form" style="display: flex; gap: 8px; margin-top: auto;">
+        <input type="text" id="chat-input" placeholder="Ask a question..." required style="flex: 1; padding: 10px 14px; border-radius: 6px; border: 1px solid rgba(45,212,191,0.1); background: #0d1818; color: #e8f5f5; outline: none; font-size: 13px; font-family: inherit;">
+        <button type="submit" style="max-width: 64px; flex: none; padding: 10px; font-size: 13px; font-weight: 600; background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.3); color: #2dd4bf; border-radius: 6px; margin: 0;">Ask</button>
       </form>
     </div>
 
+    <!-- CENTER CONTENT -->
     <div id="main-content">
+
       <form id="upload-form">
-        <h3 style="margin-top: 0; color: #fff;">Upload Document</h3>
+        <h3 style="color: #e8f5f5; margin: 0; align-self: flex-start; font-size: 15px; font-weight: 600;">Upload Document</h3>
+        <p style="align-self: flex-start; color: #3d6060; font-size: 12px; margin-top: -10px;">PDF files supported</p>
         <input type="file" id="ads" name="ads" accept="application/pdf" required>
-        <div class="btn-group"> 
-          <button type="submit" id="submit">Submit File</button>
-          <button type="reset" id="reset">Reset</button>
+        <div class="btn-group">
+          <button type="submit" id="submit" style="margin: 0;">↑ Submit File</button>
+          <button type="reset" id="reset" style="margin: 0;">Reset</button>
         </div>
       </form>
-      
-      <div id="preview-container" style="display: none; margin-top: 25px; margin-bottom: 25px;">
-        <div id="viewer-window" style="width: 100%; height: 500px; border-radius: 8px; overflow: hidden; background: #1e1e24; border: 1px solid #4a4a5a;">
-          </div>
+
+      <div id="preview-container" style="display: none; margin-top: 20px; margin-bottom: 16px; width: 100%; max-width: 440px;">
+        <div id="viewer-window" style="width: 100%; height: 480px; border-radius: 10px; overflow: hidden; background: #0f1a1a; border: 1px solid rgba(45,212,191,0.07);"></div>
       </div>
-      
-      <div style="display: flex; align-items: center; gap: 10px; margin-top: 20px; margin-bottom: 15px;">
-        <span style="color: #a0a0b0; font-size: 14px;">Summary Engine:</span>
-        <select id="summary-mode" style="padding: 8px; border-radius: 4px; background: #2a2a35; color: #fff; border: 1px solid #4a4a5a; outline: none; cursor: pointer;">
+
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 20px; margin-bottom: 14px; max-width: 440px; width: 100%;">
+        <span style="color: #3d6060; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; white-space: nowrap;">Engine</span>
+        <select id="summary-mode">
           <option value="simple">⚡ Fast & Simple</option>
           <option value="complex">🧠 Deep Reflexion</option>
         </select>
       </div>
-      
-      <button id="summarizeBtn">✨ Generate Summary</button>
-      <p id="result" style="white-space: pre-wrap; margin-top: 20px;"></p>
+
+      <button id="summarizeBtn">✦ Generate Summary</button>
+      <p id="result" style="white-space: pre-wrap; margin-top: 16px;"></p>
     </div>
 
+    <!-- NOTES PANEL -->
     <div id="comments-section" style="display: none;">
-      <h3 style="color: #fff; margin-top: 0; margin-bottom: 15px;">📓 Document Notes</h3>
-      <form id="comment-form" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+      <div style="padding-bottom: 14px; border-bottom: 1px solid rgba(45,212,191,0.07); margin-bottom: 14px;">
+        <h3 style="color: #e8f5f5; margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+          <span style="display: inline-flex; width: 22px; height: 22px; background: rgba(52,211,153,0.1); border-radius: 5px; align-items: center; justify-content: center; font-size: 12px; color: #34d399;">✎</span>
+          Document Notes
+        </h3>
+      </div>
+      <form id="comment-form" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
         <textarea id="comment-input" placeholder="Jot down a note..." required rows="3"></textarea>
-        <button type="submit" style="align-self: flex-end; padding: 10px 20px;">Post</button>
+        <button type="submit" style="align-self: flex-end; padding: 8px 18px; font-size: 13px; flex: none; margin: 0;">Post Note</button>
       </form>
       <div id="comments-list"></div>
     </div>
@@ -90,11 +111,12 @@
   </div>
 </div>
 
-<div id="login-prompt" style="text-align: center; margin-top: 150px; color: #a0a0b0;">
-  <h2>Please sign in to access your Document Assistant.</h2>
+<!-- LOGGED OUT STATE -->
+<div id="login-prompt" style="text-align: center; padding-top: 180px; color: #3d6060;">
+  <div style="display: inline-flex; width: 56px; height: 56px; background: rgba(45,212,191,0.06); border: 1px solid rgba(45,212,191,0.15); border-radius: 14px; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 20px;">📄</div>
+  <h2 style="color: #7aa8a8; font-size: 18px; font-weight: 400; margin-bottom: 8px;">Sign in to access Document AI</h2>
+  <p style="color: #3d6060; font-size: 13px;">Upload, summarize, and chat with your documents.</p>
 </div>
 
 </body>
 </html>
-
-
