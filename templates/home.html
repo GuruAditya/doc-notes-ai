@@ -60,7 +60,16 @@
           <button type="reset" id="reset">Reset</button>
         </div>
       </form>
-      <button id="summarizeBtn">✨ Summarize Document</button>
+      
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 20px; margin-bottom: 15px;">
+        <span style="color: #a0a0b0; font-size: 14px;">Summary Engine:</span>
+        <select id="summary-mode" style="padding: 8px; border-radius: 4px; background: #2a2a35; color: #fff; border: 1px solid #4a4a5a; outline: none; cursor: pointer;">
+          <option value="simple">⚡ Fast & Simple (Uses Less Quota)</option>
+          <option value="complex">🧠 Deep Reflexion Agent (High Quality)</option>
+        </select>
+      </div>
+      
+      <button id="summarizeBtn">✨ Generate Summary</button>
       <p id="result" style="white-space: pre-wrap; margin-top: 20px;"></p>
     </div>
 

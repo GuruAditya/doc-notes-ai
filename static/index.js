@@ -357,11 +357,20 @@ if (form) {
 if (summarizeBtn) {
   summarizeBtn.addEventListener("click", async () => {
     if (!uploadedDocId) return result.innerText = "Please upload or select a PDF first.";
-    result.innerText = "Generating summary...";
+    
+    // Read what mode the user selected from the dropdown
+    const mode = document.getElementById("summary-mode").value;
+    
+    result.innerText = mode === "complex" 
+        ? "Generating deep summary... (This may take 15-30 seconds)" 
+        : "Generating fast summary...";
+
     try {
-        const res = await fetch(`/summarize/${uploadedDocId}`, { headers: getAuthHeaders() });  
+        // Send the selected mode to the backend in the URL
+        const res = await fetch(`/summarize/${uploadedDocId}?mode=${mode}`, { headers: getAuthHeaders() });  
         if (!res.ok) throw new Error(`Server Error: ${res.status}`);
-        const data = await res.json(); result.innerText = data.summary || data.error;
+        const data = await res.json(); 
+        result.innerText = data.summary || data.error;
     } catch (error) { result.innerText = "Error: " + error.message; }
   });
 }
