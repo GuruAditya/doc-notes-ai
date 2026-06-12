@@ -1,8 +1,8 @@
 /* ================= FIREBASE INITIALIZATION ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-const firebaseConfig = {
+    const firebaseConfig = {
   apiKey: "AIzaSyBWlY0X2xl_39rrvb9A6cqhmReZqmdP_Lg",
   authDomain: "ai-docs-c8f3e.firebaseapp.com",
   projectId: "ai-docs-c8f3e",
@@ -11,41 +11,58 @@ const firebaseConfig = {
   appId: "1:1083653606714:web:83d7c2193297f02824d403",
   measurementId: "G-H8LPVKS8J6"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 let currentUserToken = null;
 
-// Handle Auth State Changes
+// Handle Auth State Changes (Google, Guest, or Logged Out)
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUserToken = await user.getIdToken();
     
-    // UI Updates
-    document.getElementById("login-btn").style.display = "none";
+    // UI Updates - Hide login buttons, show app
+    document.getElementById("login-group").style.display = "none";
     document.getElementById("user-info").style.display = "flex";
-    document.getElementById("user-email").innerText = user.email;
+    
+    // Distinguish between Guest and Google User
+    if (user.isAnonymous) {
+      document.getElementById("user-email").innerText = "Guest User";
+    } else {
+      document.getElementById("user-email").innerText = user.email;
+    }
+    
     document.getElementById("login-prompt").style.display = "none";
     document.getElementById("app-container").style.display = "block";
     
-    // Load secure data
+    // Load secure data for this specific user
     loadHistory();
   } else {
     currentUserToken = null;
     
-    // UI Updates
-    document.getElementById("login-btn").style.display = "inline-block";
+    // UI Updates - Show login buttons, hide app
+    document.getElementById("login-group").style.display = "block";
     document.getElementById("user-info").style.display = "none";
     document.getElementById("login-prompt").style.display = "block";
     document.getElementById("app-container").style.display = "none";
   }
 });
 
+// Auth Button Click Handlers
 document.getElementById("login-btn").onclick = () => signInWithPopup(auth, provider);
 document.getElementById("logout-btn").onclick = () => signOut(auth);
+document.getElementById("guest-btn").onclick = async () => {
+  try {
+    await signInAnonymously(auth);
+  } catch (error) {
+    showToast("Failed to sign in as guest.", true);
+    console.error("Guest Auth Error:", error);
+  }
+};
 
-// Helper function to inject headers into every request
+// Helper function to inject security token into every request
 function getAuthHeaders(contentType = null) {
   const headers = { "Authorization": `Bearer ${currentUserToken}` };
   if (contentType) headers["Content-Type"] = contentType;
@@ -87,8 +104,8 @@ function showDeleteModal(onConfirm) {
     <h3 style="margin-top: 0; margin-bottom: 10px; color: #fff;">Delete Note?</h3>
     <p style="margin-top: 0; margin-bottom: 25px; font-size: 14px; color: #a0a0b0;">This action cannot be undone.</p>
     <div style="display: flex; gap: 10px; justify-content: center;">
-      <button id="modal-cancel" style="background: #3e3f46; padding: 10px 20px; flex: 1;">Cancel</button>
-      <button id="modal-confirm" style="background: #ff5c5c; padding: 10px 20px; flex: 1;">Delete</button>
+      <button id="modal-cancel" style="background: #3e3f46; padding: 10px 20px; flex: 1; border:none; border-radius: 4px; color: white; cursor: pointer;">Cancel</button>
+      <button id="modal-confirm" style="background: #ff5c5c; padding: 10px 20px; flex: 1; border:none; border-radius: 4px; color: white; cursor: pointer;">Delete</button>
     </div>
   `;
   overlay.appendChild(box); document.body.appendChild(overlay);
@@ -141,7 +158,7 @@ async function loadHistory() {
     historyList.innerHTML = docs.map(doc => `
       <div class="history-item-wrapper">
         <a href="#" class="history-item" data-id="${doc.id}">📄 ${doc.filename}</a>
-        <button class="delete-btn" data-id="${doc.id}" title="Delete entry">🗑️</button>
+        <button class="delete-btn" data-id="${doc.id}" title="Delete entry" style="background: none; border: none; cursor: pointer;">🗑️</button>
       </div>
     `).join("");
 
@@ -218,15 +235,15 @@ async function loadComments(docId) {
     commentsList.innerHTML = comments.map(c => {
       const date = new Date(c.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       return `
-        <div class="comment-card" id="comment-card-${c.id}">
-          <div class="comment-header">
+        <div class="comment-card" id="comment-card-${c.id}" style="background: #2a2a35; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+          <div class="comment-header" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
              <span style="font-size: 11px; color: #666; font-weight: 500;">${date}</span>
              <div class="comment-actions">
-               <button class="comment-action-btn edit-note-btn" data-id="${c.id}" title="Edit note">✏️</button>
-               <button class="comment-action-btn delete-note-btn" data-id="${c.id}" title="Delete note">🗑️</button>
+               <button class="comment-action-btn edit-note-btn" data-id="${c.id}" title="Edit note" style="background: none; border: none; cursor: pointer;">✏️</button>
+               <button class="comment-action-btn delete-note-btn" data-id="${c.id}" title="Delete note" style="background: none; border: none; cursor: pointer;">🗑️</button>
              </div>
           </div>
-          <p id="comment-text-${c.id}">${c.text}</p>
+          <p id="comment-text-${c.id}" style="margin: 0; color: #e0e0e6; font-size: 14px;">${c.text}</p>
         </div>
       `;
     }).join("");
@@ -284,8 +301,8 @@ if (commentsList) {
       const editContainer = document.createElement("div"); editContainer.style.marginTop = "8px";
       const textarea = document.createElement("textarea"); textarea.value = currentText; textarea.style.width = "100%"; textarea.style.minHeight = "60px"; textarea.style.padding = "8px"; textarea.style.borderRadius = "4px"; textarea.style.border = "1px solid #7289da"; textarea.style.background = "#1e1e24"; textarea.style.color = "#fff"; textarea.style.fontFamily = "inherit"; textarea.style.fontSize = "13px"; textarea.style.boxSizing = "border-box"; textarea.style.resize = "vertical";
       const btnGroup = document.createElement("div"); btnGroup.style.display = "flex"; btnGroup.style.gap = "8px"; btnGroup.style.justifyContent = "flex-end"; btnGroup.style.marginTop = "8px";
-      const cancelBtn = document.createElement("button"); cancelBtn.innerText = "Cancel"; cancelBtn.style.padding = "6px 12px"; cancelBtn.style.background = "#3e3f46"; cancelBtn.style.fontSize = "12px"; cancelBtn.style.flex = "none"; 
-      const saveBtn = document.createElement("button"); saveBtn.innerText = "Save"; saveBtn.style.padding = "6px 12px"; saveBtn.style.background = "#248046"; saveBtn.style.fontSize = "12px"; saveBtn.style.flex = "none"; 
+      const cancelBtn = document.createElement("button"); cancelBtn.innerText = "Cancel"; cancelBtn.style.padding = "6px 12px"; cancelBtn.style.background = "#3e3f46"; cancelBtn.style.fontSize = "12px"; cancelBtn.style.flex = "none"; cancelBtn.style.border = "none"; cancelBtn.style.borderRadius = "4px"; cancelBtn.style.color = "white"; cancelBtn.style.cursor = "pointer";
+      const saveBtn = document.createElement("button"); saveBtn.innerText = "Save"; saveBtn.style.padding = "6px 12px"; saveBtn.style.background = "#248046"; saveBtn.style.fontSize = "12px"; saveBtn.style.flex = "none"; saveBtn.style.border = "none"; saveBtn.style.borderRadius = "4px"; saveBtn.style.color = "white"; saveBtn.style.cursor = "pointer";
 
       btnGroup.appendChild(cancelBtn); btnGroup.appendChild(saveBtn);
       editContainer.appendChild(textarea); editContainer.appendChild(btnGroup);

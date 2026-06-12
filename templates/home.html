@@ -11,7 +11,11 @@
 <div id="auth-banner" style="background: #141419; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #252530; position: fixed; top: 0; width: 100%; z-index: 2000; box-sizing: border-box;">
   <h2 style="margin: 0; color: #fff; font-size: 18px;">📄 Document AI</h2>
   <div>
-    <button id="login-btn" style="background-color: #4285F4; padding: 8px 16px; margin: 0;">Sign in with Google</button>
+    <div id="login-group">
+      <button id="guest-btn" style="background-color: #3e3f46; color: #e0e0e6; padding: 8px 16px; margin-right: 10px; border: 1px solid #4a4a5a;">Continue as Guest</button>
+      <button id="login-btn" style="background-color: #4285F4; padding: 8px 16px; margin: 0;">Sign in with Google</button>
+    </div>
+    
     <div id="user-info" style="display: none; align-items: center; gap: 15px;">
       <span id="user-email" style="color: #a0a0b0; font-size: 14px;"></span>
       <button id="logout-btn" style="background-color: #3e3f46; padding: 8px 16px; margin: 0;">Sign Out</button>
