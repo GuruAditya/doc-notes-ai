@@ -1,4 +1,5 @@
 import os
+import json  # <--- Added this required import for Firebase in the cloud
 import uuid
 import asyncio
 import cloudinary
@@ -36,7 +37,22 @@ BASE_DIR = Path(__file__).parent.resolve()
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 # ================= FIREBASE AUTHENTICATION =================
-cred = credentials.Certificate("firebase-credentials.json")
+# Check if we are running locally (file exists) or in the cloud (using env variable)
+firebase_cert_path = "firebase-credentials.json"
+
+if os.path.exists(firebase_cert_path):
+    # LOCAL: Use the physical file
+    cred = credentials.Certificate(firebase_cert_path)
+else:
+    # CLOUD: Read the JSON string from the Environment Variable on Render
+    firebase_json_str = os.getenv("FIREBASE_JSON")
+    if not firebase_json_str:
+        raise ValueError("FATAL ERROR: FIREBASE_JSON environment variable is missing! Check Render settings.")
+    
+    # Convert the string back into a dictionary for Firebase
+    firebase_dict = json.loads(firebase_json_str)
+    cred = credentials.Certificate(firebase_dict)
+
 firebase_admin.initialize_app(cred)
 
 security = HTTPBearer()
